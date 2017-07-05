@@ -1,0 +1,102 @@
+* Overordnet
+Parprogrammering med Erlend.
+
+Generisk spill-backend. Mulighet til å lagre noe JSON. Volitile? Trenger det
+være i en database?
+
+Tanke: jeg kan generere "nøkkeler" (hash) som
+
+1. Tillater lagring (i det minste en form for persistens som kan deles mellom
+   forskjellige spillere)
+2. Er isolert fra lagring av andre nøkler.
+
+Proof-of-concept: Tre på rad, multplayer, over nettverk. Klienter kobler til
+sammen, og kan spille mot hverandre. Mulig å generalisere? Det kjedelige med
+rene Elm-applikasjoner er at "ingenting kan lagres mellom instanser". Ikke
+korrekt ord for ord, men godt nok. OK trening i å forholde seg til en backend og
+hva man kan gjøre med denne.
+
+Mål, som alltid: muliggjøre at ungene kan (a) ha det gøy og (b) lage kule ting.
+En form for persistens gjør dette bedre. Gitt at vi forutsetter rimelig bruk (da
+kan heller serveren krasje), tror jeg vi kan muliggjøre en del kult.
+
+Så hvordan? Starte ut med en form for i-minne key-value-store?
+
+#+BEGIN_SRC haskell
+type DataStore = Dict Id Json
+#+END_SRC
+
+... eller skal vi lage noe mer struktur? Muligheten for å lagre "flere
+forskjellige ting"?
+
+#+BEGIN_SRC haskell
+type DataStore = Dict Id (Dict Key Json)
+#+END_SRC
+
+Dette høres egentlig ut som en dårlig implementering av en key value store, som
+sikkert finnes allerede. Fordelen er heller infrastruktur som allerede er oppe,
+og som ungene har tilgang til.
+* POC:
+- Elm-klient som bruker JSON til noe
+- Haskell som gir "liksom-persistens" med en (usikker) nøkkel
+* Utfordringer og åpne punkter til diskusjon
+Generelt ting jeg lurer på, uten å si at vi /bør/ gå gjennom alt.
+
+- Refaktorering til Servant?
+  - Hvordan generere kompatibelt klient-API?
+  - "Bare putte denne i en egen modul" og bruke den?
+  - Hvordan funker det egentlig å programmere over typene? Hva er en
+    typefamilie?
+  - Når vi skal lagre noe som generisk som =Json= eller noe annet ekvivalent,
+    parser vi da bare tilbake til JSON i den andre enden? Klienten må forsåvidt
+    avgjøre hvordan den vil lagre ting.
+- Hvordan innføre persistens? Hvordan er god arkitektur for rent funksjonelle
+  spårk? Hvordan unngår man å sende IO overalt?
+  - =Reader=?
+- Miljø, utvikling generelt. Spacemacs. Bruker du editor + terminal eller har du
+  alt i Emacs?
+  - Hva når server og klient /begge/ skal utvikles?
+    - Fremeles i Emacs?
+    - Serves kompilert Elm fra samme URL som Haskell-serveren? Jeg har opplevd
+      at nettleseren ikke tillater en webapplikasjon å kommunisere med
+      =localhost= på en annen port enn porten som servet HTML-en (Elm fra
+      =localhost:8000= og server fra =localhost:8080=, ikke OK)
+  - Refaktorere Haskell med Spacemacs? Bruker du =haskell=-laget som det er,
+    eller med config?
+* Plan
+Prinsipielt: lurt å starte på klienten; designe API-et som det skal /brukes/ og
+ikke "hva som tilfeldigvis passer OK med implementasjon.
+
+1. Skriv Elm-klient som /gjør noe/ med dataen som kommer. Spill er gøy.
+2. Skriv server som implementerer klient-API-et minimalt.
+3. Hvordan blir dette seende ut? Hva kan/bør refaktoreres?
+* Testflyt og miljø
+** Manuelt
+Så enkelt som mulig. Må teste alt gjennom main. Tungvindt å skrive om main hele
+tiden. Savn: tester og REPL.
+
+1. =stack build=
+2. =stack exec gamestore-exe=
+** Jalla-REPL
+1. =stack ghci
+2. =main=
+3. Oppdater =src/Lib.hs=
+4. =:r=
+5. =main=
+
+Ser ut til å funke. Hva med nye dependencies?
+
+1. Åpne =stack ghci=
+2. Legg til =containers= i gamestore.cabal
+3. Importer =Data.Map= i REPL --> Gir feil.
+4. Restart =stack ghci=
+5. Funker i terminal
+6. Funker i Spacemacs.
+** Intero-REPL i Spacemacs
+1. Starter en REPL med ~M-m m s s~
+2. Laster inn =Lib.hs= med ~M-m m s b~
+
+Obs! Holder ikke med =:r= for å laste dependencies på nytt. Må avslutte åpen fil
+og laste på nytt. Kun redefinert noe i filer? =:r= er bra.
+
+Hva med evaluering fra /inne i/ en fil?
