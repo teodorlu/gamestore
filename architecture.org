@@ -96,7 +96,11 @@ Ser ut til å funke. Hva med nye dependencies?
 1. Starter en REPL med ~M-m m s s~
 2. Laster inn =Lib.hs= med ~M-m m s b~
 
-Obs! Holder ikke med =:r= for å laste dependencies på nytt. Må avslutte åpen fil
-og laste på nytt. Kun redefinert noe i filer? =:r= er bra.
+Obs! Holder ikke med =:r= for å laste avhengigheter på nytt. Må avslutte åpen
+fil og laste på nytt. Kun redefinert noe i filer? =:r= er bra.
 
 Hva med evaluering fra /inne i/ en fil?
+** Teste klient
+Program: =httpie=.
+
+Installerer kommandoen =http=.
